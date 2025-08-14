@@ -15,7 +15,7 @@ var client = new Openstats.Client()
 // start a Game Session for the game & user associated with the GameRid & GameToken
 var gameSession = await client.StartSession();
 
-// continuously send heatbeats for the game session to the openstats API
+// continuously send heartbeats for the game session to the openstats API
 var pollTokenSource = new CancellationTokenSource();
 Task.Run(() => gameSession.BeginPolling(pollTokenSource.Token));
 
