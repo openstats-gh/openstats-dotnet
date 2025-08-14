@@ -1,34 +1,36 @@
 # openstats-dotnet
 openstats SDK for .NET
 
-## Installing
-
-WIP
-
-## Getting Started
-
-Basic usage looks like this:
+## Usage
 
 ```csharp
+// initialize an Openstats Client with your game's RID and a GameToken
+// provided by the User
 var client = new Openstats.Client() 
 {
     GameRid = "g_30JsWkn0GHof1LXH62Idm",
     GameToken = userProvidedGameToken,
 };
 
-var user = await client.GetUser();
-client.UserRid = user.Rid;
+// start a Game Session for the game & user associated with the GameRid & GameToken
+var gameSession = await client.StartSession();
 
-await client.StartSession();
-
+// continuously send heatbeats for the game session to the openstats API
 var pollTokenSource = new CancellationTokenSource();
-Task.Run(() => client.BeginPolling(pollTokenSource.Token));
+Task.Run(() => gameSession.BeginPolling(pollTokenSource.Token));
 
 // grab the user's latest achievement progress
-var progress = await client.GetAchievementProgress(user.Rid);
+// Note that we're using `client` not `gameSession`
+var progress = await client.GetAchievementProgress(gameSession.User.Rid);
+foreach (var (slug, progressValue) in progress) 
+{
+    // DisplayName might not be set, since its optional
+    var userFriendlyName = gameSession.User.DisplayName ?? gameSession.User.Slug;  
+    Console.WriteLine($"{userFriendlyName} has {progressValue} progress for achievement '{slug}'");
+}
 
-// update their progress
-progress = await client.AddAchievementProgress(new Dictionary<string, int>
+// update the user's achievement progress
+progress = await gameSession.AddAchievementProgress(new Dictionary<string, int>
 {
     ["beat-the-game"] = 1,
     ["defeat-lots-of-foes"] = 62,
